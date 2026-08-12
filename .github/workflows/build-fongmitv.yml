@@ -49,15 +49,13 @@ jobs:
         cd ..
         mkdir -p app/libs
         find media3 -name "*.aar" -type f > /tmp/aar-list.txt
-        echo "=== found aars ==="
-        cat /tmp/aar-list.txt
         while read -r f; do cp "$f" app/libs/; done < /tmp/aar-list.txt
         echo "=== app/libs ==="
         ls -la app/libs/
 
     - name: Create keystore
       run: |
-        keytool -genkey -v -keystore debug.keystore -alias debug -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Debug, OU=CI, O=FongMiTV" -noprompt
+        keytool -genkey -v -keystore app/debug.keystore -alias debug -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Debug, OU=CI, O=FongMiTV" -noprompt
         echo "storeFile=debug.keystore" > local.properties
         echo "keyAlias=debug" >> local.properties
         echo "storePassword=android" >> local.properties
