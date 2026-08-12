@@ -17,22 +17,22 @@ jobs:
       with:
         ref: ${{ github.event.inputs.target_branch }}
 
-    - name: Fetch media3 aars from WebHomeTV maven
+    - name: Checkout FongMi media3 fork
       uses: actions/checkout@v4
       with:
-        repository: GamePCStudio/WebHomeTV
-        ref: WebHomeTV.N1
-        path: media3-maven
-        sparse-checkout: |
-          third_party/maven/androidx/media3
+        repository: FongMi/media
+        ref: release-1.11.0-fongmi
+        path: media3
 
-    - name: Install media3 aars into app/libs
+    - name: Build media3 aars from fork source
       run: |
+        cd media3
+        chmod +x gradlew
+        ./gradlew :libraries:common:assembleRelease :libraries:database:assembleRelease :libraries:datasource:assembleRelease :libraries:datasource_okhttp:assembleRelease :libraries:effect:assembleRelease :libraries:exoplayer:assembleRelease :libraries:extractor:assembleRelease :libraries:session:assembleRelease :libraries:ui:assembleRelease :libraries:ui_danmaku:assembleRelease --no-daemon
+        cd ..
         mkdir -p app/libs
-        for m in common database datasource datasource-okhttp effect exoplayer extractor session ui; do
-          f="media3-maven/third_party/maven/androidx/media3/media3-$m/1.11.0-alpha01-fongmi/media3-$m-1.11.0-alpha01-fongmi.aar"
-          if [ -f "$f" ]; then cp "$f" app/libs/ && echo "OK: media3-$m"; else echo "MISSING: media3-$m"; fi
-        done
+        cp media3/libraries/*/build/outputs/aar/*-release.aar app/libs/ 2>/dev/null || true
+        ls -la app/libs/
 
     - name: Disable MPV engine (media3-mpvplayer aar is not public)
       run: |
