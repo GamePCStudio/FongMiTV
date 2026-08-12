@@ -24,30 +24,6 @@ jobs:
         ref: release-1.11.0-fongmi
         path: media3
 
-    - name: Build media3 aars from fork source
-      run: |
-        cd media3
-        chmod +x gradlew
-        ./gradlew :libraries:common:assembleRelease :libraries:database:assembleRelease :libraries:datasource:assembleRelease :libraries:datasource_okhttp:assembleRelease :libraries:effect:assembleRelease :libraries:exoplayer:assembleRelease :libraries:extractor:assembleRelease :libraries:session:assembleRelease :libraries:ui:assembleRelease :libraries:ui_danmaku:assembleRelease --no-daemon
-        cd ..
-        mkdir -p app/libs
-        cp media3/libraries/*/build/outputs/aar/*-release.aar app/libs/ 2>/dev/null || true
-        ls -la app/libs/
-
-    - name: Disable MPV engine (media3-mpvplayer aar is not public)
-      run: |
-        rm -f app/src/main/java/com/fongmi/android/tv/player/mpv/MpvPlayerEngine.java
-        rm -f app/src/main/java/com/fongmi/android/tv/player/mpv/MpvPlayerEffect.java
-        rm -f app/src/main/java/com/fongmi/android/tv/player/mpv/MpvUtil.java
-        rm -f app/src/main/java/com/fongmi/android/tv/player/mpv/MpvConfigFile.java
-        rm -f app/src/main/java/com/fongmi/android/tv/player/mpv/MpvErrorMessageProvider.java
-        rm -f app/src/main/java/com/fongmi/android/tv/player/effect/audio/MpvAudioEffectFilter.java
-        rm -f app/src/main/java/com/fongmi/android/tv/player/effect/video/MpvVideoEffectController.java
-        rm -f app/src/mobile/java/com/fongmi/android/tv/ui/dialog/MpvConfDialog.java
-        rm -f app/src/leanback/java/com/fongmi/android/tv/ui/dialog/MpvConfDialog.java
-        echo "aW1wb3J0IHN5cywgcmUKCmJhc2UgPSBzeXMuYXJndlsxXSBpZiBsZW4oc3lzLmFyZ3YpID4gMSBlbHNlICcuJwoKZGVmIHBhdGNoX2ZpbGUocmVsLCBwYWlycywgcmVnZXhlcz0oKSk6CiAgICBwID0gYmFzZSArICcvJyArIHJlbAogICAgcyA9IG9wZW4ocCwgZW5jb2Rpbmc9J3V0Zi04JykucmVhZCgpCiAgICBvcmlnID0gcwogICAgZm9yIGEsIGIgaW4gcGFpcnM6CiAgICAgICAgcyA9IHMucmVwbGFjZShhLCBiKQogICAgZm9yIHBhdCwgcmVwbCBpbiByZWdleGVzOgogICAgICAgIHMgPSByZS5zdWIocGF0LCByZXBsLCBzKQogICAgaWYgcyAhPSBvcmlnOgogICAgICAgIG9wZW4ocCwgJ3cnLCBlbmNvZGluZz0ndXRmLTgnKS53cml0ZShzKQogICAgICAgIHByaW50KCdQQVRDSEVEOicsIHJlbCkKICAgIGVsc2U6CiAgICAgICAgcHJpbnQoJ05PLUNIQU5HRTonLCByZWwpCgojIDEuIFBsYXllckVuZ2luZUZhY3Rvcnk6IHJlbW92ZSBNUFYgYnJhbmNoICsgaXNNcHZSZWFkeQpwYXRjaF9maWxlKCdhcHAvc3JjL21haW4vamF2YS9jb20vZm9uZ21pL2FuZHJvaWQvdHYvcGxheWVyL2VuZ2luZS9QbGF5ZXJFbmdpbmVGYWN0b3J5LmphdmEnLCBbCiAgICAoJ2ltcG9ydCBzdGF0aWMgY29tLmZvbmdtaS5hbmRyb2lkLnR2LnBsYXllci5lbmdpbmUuUGxheWVyRW5naW5lLlR5cGUuTVBWO1xuJywgJycpLAogICAgKCdpbXBvcnQgY29tLmZvbmdtaS5hbmRyb2lkLnR2LnBsYXllci5tcHYuTXB2UGxheWVyRW5naW5lO1xuJywgJycpLAogICAgKCcgICAgICAgICAgICBjYXNlIE1QViAtPiBuZXcgTXB2UGxheWVyRW5naW5lKGRlY29kZSwgbGlzdGVuZXIpO1xuJywgJycpLAogICAgKCcgICAgICAgIGlmICghaXNNcHZSZWFkeSgpKSByZXR1cm4gRVhPO1xuJywgJycpLAogICAgKCcgICAgICAgIHJldHVybiBpc01wdlJlYWR5KCkgPyBNUFYgOiBFWE87XG4nLCAnICAgICAgICByZXR1cm4gRVhPO1xuJyksCiAgICAoJyAgICAgICAgcmV0dXJuIE1QVjtcbicsICcgICAgICAgIHJldHVybiBFWE87XG4nKSwKXSwgWwogICAgKHInICAgIHByaXZhdGUgc3RhdGljIGJvb2xlYW4gaXNNcHZSZWFkeVwoXCkgXHtcbiAgICAgICAgcmV0dXJuIFBsYXllclNldHRpbmdcLmlzTXB2XChcKSAmJiBNcHZQbGF5ZXJFbmdpbmVcLmlzQXZhaWxhYmxlXChcKTtcbiAgICBcfVxuXG4/JywgJycpLApdKQoKIyAyLiBtb2JpbGUgU2V0dGluZ1BsYXllckZyYWdtZW50OiByZW1vdmUgTXB2Q29uZkRpYWxvZyB1c2FnZQpwYXRjaF9maWxlKCdhcHAvc3JjL21vYmlsZS9qYXZhL2NvbS9mb25nbWkvYW5kcm9pZC90di91aS9mcmFnbWVudC9TZXR0aW5nUGxheWVyRnJhZ21lbnQuamF2YScsIFsKICAgICgnaW1wb3J0IGNvbS5mb25nbWkuYW5kcm9pZC50di51aS5kaWFsb2cuTXB2Q29uZkRpYWxvZztcbicsICcnKSwKICAgICgnICAgICAgICBtQmluZGluZy5tcHZDb25mLnNldE9uQ2xpY2tMaXN0ZW5lcih0aGlzOjpvbk1wdkNvbmYpO1xuJywgJycpLApdLCBbCiAgICAocicgICAgcHJpdmF0ZSB2b2lkIG9uTXB2Q29uZlwoVmlldyB2aWV3XCkgXHtcbiAgICAgICAgTXB2Q29uZkRpYWxvZ1wuc2hvd1wodGhpc1wpO1xuICAgIFx9XG5cbj8nLCAnJyksCl0pCgojIDMuIGxlYW5iYWNrIFNldHRpbmdQbGF5ZXJBY3Rpdml0eTogcmVtb3ZlIE1wdkNvbmZEaWFsb2cgdXNhZ2UKcGF0Y2hfZmlsZSgnYXBwL3NyYy9sZWFuYmFjay9qYXZhL2NvbS9mb25nbWkvYW5kcm9pZC90di91aS9hY3Rpdml0eS9TZXR0aW5nUGxheWVyQWN0aXZpdHkuamF2YScsIFsKICAgICgnaW1wb3J0IGNvbS5mb25nbWkuYW5kcm9pZC50di51aS5kaWFsb2cuTXB2Q29uZkRpYWxvZztcbicsICcnKSwKICAgICgnICAgICAgICBtQmluZGluZy5tcHZDb25mLnNldE9uQ2xpY2tMaXN0ZW5lcih0aGlzOjpvbk1wdkNvbmYpO1xuJywgJycpLApdLCBbCiAgICAocicgICAgcHJpdmF0ZSB2b2lkIG9uTXB2Q29uZlwoVmlldyB2aWV3XCkgXHtcbiAgICAgICAgTXB2Q29uZkRpYWxvZ1wuc2hvd1wodGhpc1wpO1xuICAgIFx9XG5cbj8nLCAnJyksCl0pCgojIDQuIEF1ZGlvRWZmZWN0UHJvY2Vzc29yOiBkcm9wIG1wdnBsYXllciBpbXBvcnQgKyByZXBsYWNlIEF1ZGlvQ2hhbm5lbE1peCBjYWxscyB3aXRoIGxvY2FsIGhlbHBlcnMKX2FuY2hvciA9ICdcbiAgICBwcml2YXRlIHZvaWQgYXBwbHlCYWxhbmNlKGZsb2F0W10gc2FtcGxlcywgaW50IGJhbGFuY2UsIGludCBtb2RlKSB7JwpfaW5qZWN0ID0gJycnCiAgICBwcml2YXRlIHN0YXRpYyBmbG9hdCBtaXhNb25vKGZsb2F0W10gc2FtcGxlcykgewogICAgICAgIHJldHVybiAoc2FtcGxlc1swXSArIHNhbXBsZXNbMV0pIC8gMi4wZjsKICAgIH0KCiAgICBwcml2YXRlIHN0YXRpYyBmbG9hdCBtaXhTdGVyZW9MZWZ0KGZsb2F0W10gc2FtcGxlcykgewogICAgICAgIHJldHVybiBzYW1wbGVzWzBdOwogICAgfQoKICAgIHByaXZhdGUgc3RhdGljIGZsb2F0IG1peFN0ZXJlb1JpZ2h0KGZsb2F0W10gc2FtcGxlcykgewogICAgICAgIHJldHVybiBzYW1wbGVzWzFdOwogICAgfQonJycKcGF0Y2hfZmlsZSgnYXBwL3NyYy9tYWluL2phdmEvY29tL2ZvbmdtaS9hbmRyb2lkL3R2L3BsYXllci9lZmZlY3QvYXVkaW8vQXVkaW9FZmZlY3RQcm9jZXNzb3IuamF2YScsIFsKICAgICgnaW1wb3J0IGFuZHJvaWR4Lm1lZGlhMy5tcHZwbGF5ZXIuYXVkaW8uQXVkaW9DaGFubmVsTWl4O1xuJywgJycpLAogICAgKCdBdWRpb0NoYW5uZWxNaXgubWl4U3RlcmVvTGVmdChzYW1wbGVzKScsICdtaXhTdGVyZW9MZWZ0KHNhbXBsZXMpJyksCiAgICAoJ0F1ZGlvQ2hhbm5lbE1peC5taXhTdGVyZW9SaWdodChzYW1wbGVzKScsICdtaXhTdGVyZW9SaWdodChzYW1wbGVzKScpLAogICAgKCdBdWRpb0NoYW5uZWxNaXgubWl4TW9ubyhzYW1wbGVzKScsICdtaXhNb25vKHNhbXBsZXMpJyksCiAgICAoX2FuY2hvciwgX2luamVjdCArIF9hbmNob3IpLApdKQo=" | base64 -d > mpv_patch.py
-        python3 mpv_patch.py .
-
     - name: Setup Java 21
       uses: actions/setup-java@v4
       with:
@@ -63,6 +39,18 @@ jobs:
       uses: android-actions/setup-android@v3
       with:
         packages: "platform-tools build-tools;37.0.0 platforms;android-37.0"
+
+    - name: Build media3 aars from fork source
+      run: |
+        # skip FFmpeg native build (only Java layer needed at compile time; libmpv.so ships with mpvplayer)
+        rm -rf media3/libraries/decoder_ffmpeg/src/main/ffmpeg
+        cd media3
+        chmod +x gradlew
+        ./gradlew :lib-common:assembleRelease :lib-database:assembleRelease :lib-datasource:assembleRelease :lib-datasource-okhttp:assembleRelease :lib-effect:assembleRelease :lib-exoplayer:assembleRelease :lib-extractor:assembleRelease :lib-session:assembleRelease :lib-ui:assembleRelease :lib-ui-danmaku:assembleRelease :lib-mpvplayer:assembleRelease --no-daemon
+        cd ..
+        mkdir -p app/libs
+        cp media3/libraries/*/build/outputs/aar/*-release.aar app/libs/ 2>/dev/null || true
+        ls -la app/libs/
 
     - name: Create keystore
       run: |
