@@ -38,7 +38,7 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       with:
-        packages: "platform-tools build-tools;37.0.0 platforms;android-37.0"
+        packages: "platform-tools build-tools;37.0.0 platforms;android-37.0 ndk;29.0.14206865 cmake;3.22.1"
 
     - name: Pre-download Gradle dists (multi-mirror, retry x3)
       run: |
@@ -73,11 +73,10 @@ jobs:
 
     - name: Build media3 aars from fork source
       run: |
-        rm -rf media3/libraries/decoder_ffmpeg/src/main/ffmpeg
         cd media3
         chmod +x gradlew
         for i in 1 2 3; do
-          ./gradlew :lib-common:assembleRelease :lib-database:assembleRelease :lib-datasource:assembleRelease :lib-datasource-okhttp:assembleRelease :lib-effect:assembleRelease :lib-exoplayer:assembleRelease :lib-extractor:assembleRelease :lib-session:assembleRelease :lib-ui:assembleRelease :lib-ui-danmaku:assembleRelease :lib-mpvplayer:assembleRelease --no-daemon && break
+          ./gradlew :lib-common:assembleRelease :lib-database:assembleRelease :lib-datasource:assembleRelease :lib-datasource-okhttp:assembleRelease :lib-effect:assembleRelease :lib-exoplayer:assembleRelease :lib-extractor:assembleRelease :lib-session:assembleRelease :lib-ui:assembleRelease :lib-ui-danmaku:assembleRelease :lib-mpvplayer:assembleRelease :lib-decoder-ffmpeg:assembleRelease :lib-decoder-mpegh:assembleRelease --no-daemon && break
           echo "media3 build failed (try $i), retrying in 60s"
           sleep 60
         done
