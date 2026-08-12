@@ -40,32 +40,47 @@ jobs:
       with:
         packages: "platform-tools build-tools;37.0.0 platforms;android-37.0"
 
-    - name: Pre-download Gradle dists (GitHub mirror, retry x5)
+    - name: Pre-download Gradle dists (multi-mirror, retry x3)
       run: |
         preload() {
-          local URL="$1" MIRROR="$2" VER="$3"
+          local URL="$1" VER="$2"
           local HASH=$(echo -n "$URL" | md5sum | awk '{print $1}')
           local D="$HOME/.gradle/wrapper/dists/$VER/$HASH"
           local F=$(basename "$URL")
           mkdir -p "$D"
-          if [ ! -f "$D/$F" ]; then
-            for i in 1 2 3 4 5; do
-              echo "downloading $VER (try $i)"
-              if curl -fL --retry 3 -o "$D/$F" "$MIRROR"; then break; fi
+          [ -f "$D/$F" ] && { echo "cached: $VER"; ls -la "$D"; return; }
+          local MIRRORS=(
+            "https://github.com/gradle/gradle-distributions/releases/download/v${VER#gradle-}/$F"
+            "https://mirrors.cloud.tencent.com/gradle/$F"
+            "https://mirrors.aliyun.com/macports/distfiles/gradle/$F"
+            "https://mirrors.huaweicloud.com/gradle/$F"
+            "$URL"
+          )
+          for M in "${MIRRORS[@]}"; do
+            echo "trying $M"
+            for i in 1 2 3; do
+              if curl -fL --retry 2 --connect-timeout 20 -o "$D/$F" "$M" 2>/dev/null; then
+                echo "OK from $M"; ls -la "$D"; return
+              fi
               sleep 5
             done
-          fi
-          ls -la "$D"
+          done
+          echo "ALL MIRRORS FAILED for $VER"
+          exit 1
         }
-        preload "https://services.gradle.org/distributions/gradle-9.1.0-all.zip" "https://github.com/gradle/gradle-distributions/releases/download/v9.1.0/gradle-9.1.0-all.zip" "gradle-9.1.0-all"
-        preload "https://services.gradle.org/distributions/gradle-9.6.1-bin.zip" "https://github.com/gradle/gradle-distributions/releases/download/v9.6.1/gradle-9.6.1-bin.zip" "gradle-9.6.1-bin"
+        preload "https://services.gradle.org/distributions/gradle-9.1.0-all.zip" "gradle-9.1.0-all"
+        preload "https://services.gradle.org/distributions/gradle-9.6.1-bin.zip" "gradle-9.6.1-bin"
 
     - name: Build media3 aars from fork source
       run: |
         rm -rf media3/libraries/decoder_ffmpeg/src/main/ffmpeg
         cd media3
         chmod +x gradlew
-        ./gradlew :lib-common:assembleRelease :lib-database:assembleRelease :lib-datasource:assembleRelease :lib-datasource-okhttp:assembleRelease :lib-effect:assembleRelease :lib-exoplayer:assembleRelease :lib-extractor:assembleRelease :lib-session:assembleRelease :lib-ui:assembleRelease :lib-ui-danmaku:assembleRelease :lib-mpvplayer:assembleRelease --no-daemon
+        for i in 1 2 3; do
+          ./gradlew :lib-common:assembleRelease :lib-database:assembleRelease :lib-datasource:assembleRelease :lib-datasource-okhttp:assembleRelease :lib-effect:assembleRelease :lib-exoplayer:assembleRelease :lib-extractor:assembleRelease :lib-session:assembleRelease :lib-ui:assembleRelease :lib-ui-danmaku:assembleRelease :lib-mpvplayer:assembleRelease --no-daemon && break
+          echo "media3 build failed (try $i), retrying in 60s"
+          sleep 60
+        done
         cd ..
         mkdir -p app/libs
         find media3 -name "*.aar" -type f > /tmp/aar-list.txt
@@ -84,7 +99,12 @@ jobs:
       run: chmod +x ./gradlew
 
     - name: Build APK
-      run: ./gradlew assembleRelease --no-daemon --stacktrace
+      run: |
+        for i in 1 2 3; do
+          ./gradlew assembleRelease --no-daemon --stacktrace && break
+          echo "APK build failed (try $i), retrying in 60s"
+          sleep 60
+        done
 
     - name: Locate APKs
       run: |
