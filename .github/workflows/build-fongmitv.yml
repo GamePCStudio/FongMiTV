@@ -17,6 +17,61 @@ jobs:
       with:
         ref: ${{ github.event.inputs.target_branch }}
 
+    - name: Fetch media3 aars from WebHomeTV maven
+      uses: actions/checkout@v4
+      with:
+        repository: GamePCStudio/WebHomeTV
+        ref: WebHomeTV.N1
+        path: media3-maven
+        sparse-checkout: |
+          third_party/maven/androidx/media3
+
+    - name: Install media3 aars into app/libs
+      run: |
+        mkdir -p app/libs
+        for m in common database datasource datasource-okhttp effect exoplayer extractor session ui; do
+          f="media3-maven/third_party/maven/androidx/media3/media3-$m/1.11.0-alpha01-fongmi/media3-$m-1.11.0-alpha01-fongmi.aar"
+          if [ -f "$f" ]; then cp "$f" app/libs/ && echo "OK: media3-$m"; else echo "MISSING: media3-$m"; fi
+        done
+
+    - name: Disable MPV engine (media3-mpvplayer aar is not public)
+      run: |
+        rm -f app/src/main/java/com/fongmi/android/tv/player/mpv/MpvPlayerEngine.java
+        rm -f app/src/main/java/com/fongmi/android/tv/player/mpv/MpvPlayerEffect.java
+        rm -f app/src/main/java/com/fongmi/android/tv/player/mpv/MpvUtil.java
+        rm -f app/src/main/java/com/fongmi/android/tv/player/mpv/MpvConfigFile.java
+        rm -f app/src/main/java/com/fongmi/android/tv/player/mpv/MpvErrorMessageProvider.java
+        rm -f app/src/main/java/com/fongmi/android/tv/player/effect/audio/MpvAudioEffectFilter.java
+        rm -f app/src/main/java/com/fongmi/android/tv/player/effect/video/MpvVideoEffectController.java
+        rm -f app/src/mobile/java/com/fongmi/android/tv/ui/dialog/MpvConfDialog.java
+        rm -f app/src/leanback/java/com/fongmi/android/tv/ui/dialog/MpvConfDialog.java
+        python3 - <<'EOF'
+p = 'app/src/main/java/com/fongmi/android/tv/player/engine/PlayerEngineFactory.java'
+s = open(p).read()
+s = s.replace('import static com.fongmi.android.tv.player.engine.PlayerEngine.Type.MPV;\n', '')
+s = s.replace('import com.fongmi.android.tv.player.mpv.MpvPlayerEngine;\n', '')
+s = s.replace('            case MPV -> new MpvPlayerEngine(decode, listener);\n', '')
+s = s.replace('        if (!isMpvReady()) return EXO;\n', '')
+s = s.replace('        return isMpvReady() ? MPV : EXO;\n', '        return EXO;\n')
+s = s.replace('        return MPV;\n', '        return EXO;\n')
+s = s.replace('''    private static boolean isMpvReady() {
+        return PlayerSetting.isMpv() && MpvPlayerEngine.isAvailable();
+    }
+
+''', '')
+open(p, 'w').write(s)
+p2 = 'app/src/mobile/java/com/fongmi/android/tv/ui/fragment/SettingPlayerFragment.java'
+s2 = open(p2).read()
+s2 = s2.replace('import com.fongmi.android.tv.ui.dialog.MpvConfDialog;\n', '')
+s2 = s2.replace('        mBinding.mpvConf.setOnClickListener(this::onMpvConf);\n', '')
+s2 = s2.replace('''    private void onMpvConf(View view) {
+        MpvConfDialog.show(this);
+    }
+
+''', '')
+open(p2, 'w').write(s2)
+EOF
+
     - name: Setup Java 21
       uses: actions/setup-java@v4
       with:
