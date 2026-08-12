@@ -42,14 +42,17 @@ jobs:
 
     - name: Build media3 aars from fork source
       run: |
-        # skip FFmpeg native build (only Java layer needed at compile time; libmpv.so ships with mpvplayer)
         rm -rf media3/libraries/decoder_ffmpeg/src/main/ffmpeg
         cd media3
         chmod +x gradlew
         ./gradlew :lib-common:assembleRelease :lib-database:assembleRelease :lib-datasource:assembleRelease :lib-datasource-okhttp:assembleRelease :lib-effect:assembleRelease :lib-exoplayer:assembleRelease :lib-extractor:assembleRelease :lib-session:assembleRelease :lib-ui:assembleRelease :lib-ui-danmaku:assembleRelease :lib-mpvplayer:assembleRelease --no-daemon
         cd ..
         mkdir -p app/libs
-        cp media3/libraries/*/build/outputs/aar/*-release.aar app/libs/ 2>/dev/null || true
+        find media3 -name "*.aar" -type f > /tmp/aar-list.txt
+        echo "=== found aars ==="
+        cat /tmp/aar-list.txt
+        while read -r f; do cp "$f" app/libs/; done < /tmp/aar-list.txt
+        echo "=== app/libs ==="
         ls -la app/libs/
 
     - name: Create keystore
