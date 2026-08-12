@@ -31,7 +31,7 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       with:
-        packages: "platform-tools build-tools;37.0.0 platforms;android-37"
+        packages: "platform-tools build-tools;37.0.0 platforms;android-37.0"
 
     - name: Create keystore
       run: |
