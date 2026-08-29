@@ -86,22 +86,57 @@ public class CollectActivity extends BaseActivity {
         mBinding.pager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageSelected(int position) {
-                mBinding.recycler.setSelectedPosition(position);
-                mBinding.recycler.requestFocus();
+                if (Setting.getSearchMode() == 0) {
+                    mBinding.recycler.setSelectedPosition(position);
+                    mBinding.recycler.requestFocus();
+                } else {
+                    mBinding.recyclerV.setSelectedPosition(position);
+                    mBinding.recyclerV.requestFocus();
+                }
             }
         });
-        mBinding.recycler.addOnChildViewHolderSelectedListener(new OnChildViewHolderSelectedListener() {
+        OnChildViewHolderSelectedListener listener = new OnChildViewHolderSelectedListener() {
             @Override
             public void onChildViewHolderSelected(@NonNull RecyclerView parent, @Nullable RecyclerView.ViewHolder child, int position, int subposition) {
                 onChildSelected(child);
             }
-        });
+        };
+        mBinding.recycler.addOnChildViewHolderSelectedListener(listener);
+        mBinding.recyclerV.addOnChildViewHolderSelectedListener(listener);
     }
 
     private void setRecyclerView() {
-        mBinding.recycler.setHorizontalSpacing(ResUtil.dp2px(16));
-        mBinding.recycler.setRowHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
-        mBinding.recycler.setAdapter(mAdapter = new CollectAdapter());
+        int mode = Setting.getSearchMode();
+        mBinding.contentLayout.setClipChildren(mode != 0);
+        if (mode == 0) {
+            mBinding.recycler.setVisibility(View.VISIBLE);
+            mBinding.recyclerV.setVisibility(View.GONE);
+            mBinding.contentLayout.setOrientation(androidx.appcompat.widget.LinearLayoutCompat.VERTICAL);
+            ViewGroup.LayoutParams pagerParams = mBinding.pager.getLayoutParams();
+            pagerParams.width = ViewGroup.LayoutParams.MATCH_PARENT;
+            pagerParams.height = ViewGroup.LayoutParams.MATCH_PARENT;
+            if (pagerParams instanceof android.widget.LinearLayout.LayoutParams) {
+                ((android.widget.LinearLayout.LayoutParams) pagerParams).weight = 0;
+            }
+            mBinding.pager.setLayoutParams(pagerParams);
+            mBinding.recycler.setHorizontalSpacing(ResUtil.dp2px(16));
+            mBinding.recycler.setRowHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
+            mBinding.recycler.setAdapter(mAdapter = new CollectAdapter());
+        } else {
+            mBinding.recycler.setVisibility(View.GONE);
+            mBinding.recyclerV.setVisibility(View.VISIBLE);
+            mBinding.contentLayout.setOrientation(androidx.appcompat.widget.LinearLayoutCompat.HORIZONTAL);
+            ViewGroup.LayoutParams pagerParams = mBinding.pager.getLayoutParams();
+            pagerParams.width = 0;
+            pagerParams.height = ViewGroup.LayoutParams.MATCH_PARENT;
+            if (pagerParams instanceof android.widget.LinearLayout.LayoutParams) {
+                ((android.widget.LinearLayout.LayoutParams) pagerParams).weight = 1;
+            }
+            mBinding.pager.setLayoutParams(pagerParams);
+            mBinding.recyclerV.setVerticalSpacing(ResUtil.dp2px(16));
+            mBinding.recyclerV.setColumnWidth(ViewGroup.LayoutParams.WRAP_CONTENT);
+            mBinding.recyclerV.setAdapter(mAdapter = new CollectAdapter());
+        }
     }
 
     private void setViewModel() {
@@ -148,7 +183,7 @@ public class CollectActivity extends BaseActivity {
     private final Runnable mRunnable = new Runnable() {
         @Override
         public void run() {
-            mBinding.pager.setCurrentItem(mBinding.recycler.getSelectedPosition());
+            mBinding.pager.setCurrentItem(Setting.getSearchMode() == 0 ? mBinding.recycler.getSelectedPosition() : mBinding.recyclerV.getSelectedPosition());
         }
     };
 

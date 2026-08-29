@@ -17,7 +17,7 @@ import com.fongmi.android.tv.bean.Config;
 import com.fongmi.android.tv.bean.Live;
 import com.fongmi.android.tv.bean.Site;
 import com.fongmi.android.tv.databinding.ActivitySettingBinding;
-import com.fongmi.android.tv.db.BackupManager;
+import com.fongmi.android.tv.db.AppDatabase;
 import com.fongmi.android.tv.event.ConfigEvent;
 import com.fongmi.android.tv.event.RefreshEvent;
 import com.fongmi.android.tv.impl.Callback;
@@ -50,6 +50,7 @@ public class SettingActivity extends BaseActivity implements ConfigListener, Sit
 
     private ActivitySettingBinding mBinding;
     private String[] size;
+    private String[] search;
 
     public static void start(Activity activity) {
         activity.startActivity(new Intent(activity, SettingActivity.class));
@@ -75,7 +76,7 @@ public class SettingActivity extends BaseActivity implements ConfigListener, Sit
         mBinding.vod.requestFocus();
         mBinding.vodUrl.setText(VodConfig.getDesc());
         mBinding.liveUrl.setText(LiveConfig.getDesc());
-        mBinding.wallUrl.setText(WallConfig.getDesc());
+        setWallText();
         mBinding.versionText.setText(BuildConfig.VERSION_NAME);
         setCacheText();
         setOtherText();
@@ -85,6 +86,7 @@ public class SettingActivity extends BaseActivity implements ConfigListener, Sit
         mBinding.dohText.setText(getDohList()[getDohIndex()]);
         mBinding.incognitoText.setText(Setting.getSwitch(Setting.isIncognito()));
         mBinding.sizeText.setText((size = ResUtil.getStringArray(R.array.select_size))[PlayerSetting.getSize()]);
+        mBinding.searchText.setText((search = ResUtil.getStringArray(R.array.select_search))[Setting.getSearchMode()]);
     }
 
     private void setCacheText() {
@@ -103,6 +105,7 @@ public class SettingActivity extends BaseActivity implements ConfigListener, Sit
         mBinding.live.setOnClickListener(this::onLive);
         mBinding.wall.setOnClickListener(this::onWall);
         mBinding.size.setOnClickListener(this::setSize);
+        mBinding.search.setOnClickListener(this::setSearch);
         mBinding.cache.setOnClickListener(this::onCache);
         mBinding.backup.setOnClickListener(this::onBackup);
         mBinding.player.setOnClickListener(this::onPlayer);
@@ -233,8 +236,9 @@ public class SettingActivity extends BaseActivity implements ConfigListener, Sit
     }
 
     private void setWallDefault(View view) {
-        Setting.putWall(Setting.getWall() == 4 ? 1 : Setting.getWall() + 1);
+        Setting.putWall(Setting.nextDefaultWall());
         Setting.putWallType(0);
+        setWallText();
         ConfigEvent.wall();
     }
 
@@ -248,6 +252,10 @@ public class SettingActivity extends BaseActivity implements ConfigListener, Sit
         return true;
     }
 
+    private void setWallText() {
+        mBinding.wallUrl.setText(Setting.getWallDesc(WallConfig.getDesc()));
+    }
+
     private void setIncognito(View view) {
         Setting.putIncognito(!Setting.isIncognito());
         mBinding.incognitoText.setText(Setting.getSwitch(Setting.isIncognito()));
@@ -258,6 +266,12 @@ public class SettingActivity extends BaseActivity implements ConfigListener, Sit
         mBinding.sizeText.setText(size[index]);
         PlayerSetting.putSize(index);
         RefreshEvent.size();
+    }
+
+    private void setSearch(View view) {
+        int index = (Setting.getSearchMode() + 1) % search.length;
+        mBinding.searchText.setText(search[index]);
+        Setting.putSearchMode(index);
     }
 
     private void setDoh(View view) {
@@ -281,7 +295,7 @@ public class SettingActivity extends BaseActivity implements ConfigListener, Sit
     }
 
     private void onBackup(View view) {
-        PermissionUtil.requestFile(this, allGranted -> BackupManager.backup(new Callback() {
+        PermissionUtil.requestFile(this, allGranted -> AppDatabase.backup(new Callback() {
             @Override
             public void success() {
                 Notify.show(R.string.backup_success);
@@ -321,7 +335,7 @@ public class SettingActivity extends BaseActivity implements ConfigListener, Sit
         if (event.type() != ConfigEvent.Type.COMMON) return;
         mBinding.vodUrl.setText(VodConfig.getDesc());
         mBinding.liveUrl.setText(LiveConfig.getDesc());
-        mBinding.wallUrl.setText(WallConfig.getDesc());
+        setWallText();
     }
 
 }

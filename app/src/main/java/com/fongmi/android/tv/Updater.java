@@ -22,6 +22,8 @@ import java.io.File;
 
 public class Updater implements Download.Callback, UpdateListener {
 
+    private static final boolean ENABLE_UPDATE = false; // 在线升级开关:false=屏蔽,true=恢复
+
     private final Download download;
     private UpdateDialog dialog;
 
@@ -38,11 +40,11 @@ public class Updater implements Download.Callback, UpdateListener {
     }
 
     private String getJson() {
-        return Github.getJson(BuildConfig.FLAVOR);
+        return Github.getJson(BuildConfig.FLAVOR_mode);
     }
 
     private String getApk() {
-        return Github.getApk(BuildConfig.FLAVOR + "-" + (android.os.Process.is64Bit() ? "arm64_v8a" : "armeabi_v7a"));
+        return Github.getApk(BuildConfig.FLAVOR_mode + "-" + BuildConfig.FLAVOR_abi);
     }
 
     public Updater force() {
@@ -52,6 +54,7 @@ public class Updater implements Download.Callback, UpdateListener {
     }
 
     public void start(FragmentActivity activity) {
+        if (!ENABLE_UPDATE) return; // 屏蔽在线升级,保留后续恢复能力
         if (!Setting.getUpdate()) return;
         Task.execute(() -> doInBackground(activity));
     }
